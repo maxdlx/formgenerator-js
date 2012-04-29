@@ -1,28 +1,12 @@
 (function($) {
 	$.fn.formgenerator = function(options) {
-		var version = "0.4",
+		var version = "0.5",
 			opts = $.extend({
 				'fileext'	: '.tpl',
 				'generator'	: 'generator.tpl',
 				'path'		: './templates',
 				'theme'		: 'bootstrap',
-				/**
-				 * List of tokens
-				 * optional value: markup if token is missing
-				 */
-				'tokens'	: [
-					"TEXT_LABEL",
-					"FIELD_NAME",
-					"FIELD_ID",
-					"FIELD_VALUE",
-					"FIELD_PLACEHOLDER",
-					"FIELD_REQUIRED",
-					"PATTERN",
-					"TEXT_REQUIRED",
-					"TEXT_INVALID"
-				],
-				// Logging verbosity
-				'verbose'	: true
+				'verbose'	: true	// false turns off logging
 			}, options);
 
 		return this.each(function() {
@@ -64,6 +48,48 @@
 				});
 			}
 
+			function processTemplate(template, data) {
+				log("processTemplate() called");
+				log("data: ");
+				log(data);
+				var x,
+					html = "",
+					$template = $(template);
+				for (x in data) {
+					if (data.hasOwnProperty(x)) {
+						if (data[x]) {
+							if (x === "label") {
+								$template.find("label.control-label").html(data[x]);
+								continue;
+							}
+							if (x === "id")
+								$template.find("label.control-label").attr("for", data[x]);
+							$template.find("input, select, textarea").attr(x, data[x]);
+						}
+					}
+				}
+				html = $template.html();
+				log("processTemplate() returns with: ");
+				log(html);
+				return html;
+			}
+
+			function getTemplateData($configurator) {
+				var val,
+					name,
+					templateData = {};
+				log("getTemplateData() called");
+				$configurator.find('[name^="var-"]').each(function() {
+					var $this = $(this);
+					val = $this.is(':checkbox') ? $this.prop('checked') : $this.val();
+					name = this.name.replace(/^var\-/, '');
+					templateData[name] = val;
+				});
+				log("templateData: ");
+				log(templateData);
+				return templateData;
+			}
+
 			function startConfigurator(html) {
 				// Insert generator html
 				if (typeof html !== "undefined")
@@ -71,54 +97,30 @@
 
 				var $configurator = $this.find(".formgenerator-configurator");
 
-				// Sync source code to hidden textarea for whatever reason
-				$configurator.find(".field-source-encoded").on("change", function() {
-					$configurator.find(".field-source").val($(this).val());
-				});
-				$configurator.find(".field-source").on("change", function() {
-					$configurator.find(".field-source-cache").val($(this).val());
-				});
-
 				// Bind button clicks
 				$("button[data-template]").on("click", function() {
 					var button_text = $(this).text(),
 						template = $(this).attr("data-template");
 					log("Event Button clicked: " + button_text);
 					log("Template: " + template);
-					getTemplate(template, function(data, textStatus) {
-						log("$configurator: " + $configurator.length);
+					getTemplate(template, function(template, textStatus) {
+						log("$configurator: " + !!$configurator.length);
 						$configurator.fadeOut('fast', function() {
 							var $preview = $configurator.find(".field-preview"),
-								$source  = $configurator.find(".field-source")
-								$cache   = $configurator.find(".field-source-cache");
+								$source  = $configurator.find(".field-source");
 
 							$configurator.find("legend").eq(0).html('Configure ' + button_text);
-							$preview.html(data);
-							$source.val(data);
-							$cache.val(data);
-
-							// Change events for token replacement
-							var x = 0;
-							for (x; x < tokens.length; x ++) {
-								var processTemplate = (function(tokens, x) {
-									return function() {
-										var template = $source.val();
-										log("Replace '" + tokens[x] + "' with '" + $(this).val() + "'");
-										template = template.replace(tokens[x], $(this).val());
-										log("Processed template: " + template);
-										$preview.html(template);
-									}
-								})(tokens, x);
-								var saveTemplate = function() {
-									$source.val($preview.html());
-									$cache.val($preview.html());
-								}
-								log("Bind events to: " + '[name="' + tokens[x] + '"]');
-								$configurator.find('[name="' + tokens[x] + '"]').on("click", saveTemplate);
-								$configurator.find('[name="' + tokens[x] + '"]').on("blur", saveTemplate);
-								$configurator.find('[name="' + tokens[x] + '"]').on("keyup", processTemplate);
+							// Update preview and source view
+							function updateCallback() {
+								log("updateCallback() called");
+								var processedTemplate = processTemplate(template, getTemplateData($configurator));
+								$source.val(processedTemplate);
+								$preview.html(processedTemplate);
 							}
-
+							updateCallback();
+							// Bind events on keyup, click, etc. to update preview and source view
+							$configurator.find('[name^="var-"]').on("keyup", updateCallback);
+							$configurator.find('[name^="var-"]').on("click", updateCallback);
 							$configurator.fadeIn('fast');
 						});
 					});

@@ -57,21 +57,21 @@
 				<div class="control-group form-inline">
 					<div class="row">
 						<div class="span6 well-small">
-							<input class="input-mini" type="text" name="FIELD_NAME" value="" placeholder="name=&quot;&quot;">
-							<input class="input-mini" type="text" name="FIELD_ID" value="" placeholder="id=&quot;&quot;">
+							<input class="input-mini" type="text" name="var-name" placeholder="name=&quot;&quot;">
+							<input class="input-mini" type="text" name="var-id" placeholder="id=&quot;&quot;">
 						</div>
 						<div class="span6 well-small">
-							<input class="input-mini" type="text" name="TEXT_LABEL" value="" placeholder="Label text">
-							<input class="input-mini" type="text" name="FIELD_VALUE" value="" placeholder="value=&quot;&quot;">
-							<input class="input-mini" type="text" name="FIELD_PLACEHOLDER" value="" placeholder="placeholder=&quot;&quot;">
-							<label class="checkbox"><input type="checkbox" name="FIELD_REQUIRED" value="1"> required</label>
-							<input class="input-mini" type="text" name="PATTERN" value="" placeholder="pattern=&quot;&quot;">
+							<input class="input-mini" type="text" name="var-label" placeholder="Label text" rel="">
+							<input class="input-mini" type="text" name="var-value" placeholder="value=&quot;&quot;">
+							<input class="input-mini" type="text" name="var-placeholder" placeholder="placeholder=&quot;&quot;">
+							<label class="checkbox"><input type="checkbox" name="var-required" value="1"> required</label>
+							<input class="input-mini" type="text" name="var-pattern" value="" placeholder="pattern=&quot;&quot;">
 						</div>
 					</div>
 					<div class="row">
 						<div class="span6 well-small">
-							<input class="span3" type="text" name="TEXT_REQUIRED" value="" placeholder="data-required=&quot;&quot;">
-							<input class="span3" type="text" name="TEXT_INVALID" value="" placeholder="data-invalid=&quot;&quot;">
+							<input class="span3" type="text" name="var-data-required" value="" placeholder="data-required=&quot;&quot;">
+							<input class="span3" type="text" name="var-data-invalid" value="" placeholder="data-invalid=&quot;&quot;">
 						</div>
 					</div>
 				</div>
