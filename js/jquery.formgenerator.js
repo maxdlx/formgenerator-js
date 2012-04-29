@@ -1,6 +1,6 @@
 (function($) {
 	$.fn.formgenerator = function(options) {
-		var version = "0.2",
+		var version = "0.3",
 			opts = $.extend({
 				'fileext'	: '.tpl',
 				'generator'	: 'generator.tpl',
@@ -11,6 +11,7 @@
 				 * optional value: markup if token is missing
 				 */
 				'tokens'	: [
+					"TEXTLABEL",
 					"FIELDNAME",
 					"FIELDVALUE",
 					"FIELDREQUIED",
@@ -68,19 +69,23 @@
 					log("init() callback returned");
 					log("data: " + data);
 					log("textStatus: " + textStatus);
-
-					if (data)
-						$this.prepend(data);
-					else
+					if (!data)
 						return alert("Generator could not be loaded! Error was: " + textStatus);
+
+					$this.prepend(data);
+					$modal = $this.find(".modal"),
 
 					// Bind generator functions
 					$("button[data-template]").on("click", function() {
-						var template = $(this).attr("data-template");
-						log("Event click: " + this.innerHTML);
+						var button_text = $(this).text(),
+							template = $(this).attr("data-template");
+						log("Event Button clicked: " + button_text);
 						log("Template: " + template);
 						getTemplate(template, function(data, textStatus) {
-							$form.append(data);
+							$modal.find(".modal-header").html('<h3>New ' + button_text + '</h3>');
+							$modal.find(".modal-body .field-preview").html(data);
+							$modal.find(".modal-body .field-source").val(data);
+							$modal.modal("show");
 						});
 						return false;
 					});

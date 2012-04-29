@@ -1,7 +1,7 @@
 <div class="control-group">
-	<label for="FIELDNAME" class="control-label">TEXTLABEL</label>
+	<label for="FIELD_NAME" class="control-label">TEXTLABEL</label>
 	<div class="controls">
-		<input name="FIELDNAME" id="FIELDNAME" type="text" value="FIELDVALUE" FIELDREQUIED pattern="PATTERN" data-required="TEXTREQUIRED" data-invalid="TEXTINVALID">
+		<input name="FIELD_NAME" id="FIELD_ID" type="text" value="FIELD_VALUE" FIELD_REQUIRED pattern="PATTERN" data-required="TEXT_REQUIRED" data-invalid="TEXT_INVALID">
 		</div>
 	</div>
 </div>

@@ -1,4 +1,22 @@
 <!-- Controls for HTML Form Generator -->
+<div class="modal hide">
+	<div class="modal-header"></div>
+	<div class="modal-body">
+		<div class="field-options"></div>
+		<div class="field-preview"></div>
+		<div class="control-group">
+			<label class="control-label">Source code</label>
+			<div class="controls">
+				<textarea class="field-source input-xlarge" name="field-source" rows="15"></textarea>
+			</div>
+		</div>
+	</div>
+	<dic class="modal-footer">
+		<div class="form-actions">
+			<button class="btn btn-primary">Save</button>
+			<button class="btn" data-dismiss="modal">Abbrechen</button>
+	</div>
+</div>
 <legend>Add Widget</legend>
 <div class="control-group">
 	<label>Text fields</label>
