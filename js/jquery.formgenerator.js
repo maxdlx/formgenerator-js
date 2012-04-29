@@ -1,6 +1,6 @@
 (function($) {
 	$.fn.formgenerator = function(options) {
-		var version = "0.3",
+		var version = "0.4",
 			opts = $.extend({
 				'fileext'	: '.tpl',
 				'generator'	: 'generator.tpl',
@@ -11,13 +11,15 @@
 				 * optional value: markup if token is missing
 				 */
 				'tokens'	: [
-					"TEXTLABEL",
-					"FIELDNAME",
-					"FIELDVALUE",
-					"FIELDREQUIED",
+					"TEXT_LABEL",
+					"FIELD_NAME",
+					"FIELD_ID",
+					"FIELD_VALUE",
+					"FIELD_PLACEHOLDER",
+					"FIELD_REQUIRED",
 					"PATTERN",
-					"TEXTREQUIRED",
-					"TEXTINVALID"
+					"TEXT_REQUIRED",
+					"TEXT_INVALID"
 				],
 				// Logging verbosity
 				'verbose'	: true
@@ -50,7 +52,7 @@
 				log("getTemplate() called with argument: " + template);
 
 				// Get Template Contents
-				$.get(baseurl + template + fileext, function(data, textStatus) {
+				$.get(baseurl + template + fileext + "?rand=" + Math.random(), function(data, textStatus) {
 					log("getTemplate() callback returned");
 					log("data: " + data)
 					log("textStatus: " + textStatus);
@@ -59,6 +61,68 @@
 
 					if (typeof callback === "function")
 						return callback(data);
+				});
+			}
+
+			function startConfigurator(html) {
+				// Insert generator html
+				if (typeof html !== "undefined")
+					$this.prepend(html);
+
+				var $configurator = $this.find(".formgenerator-configurator");
+
+				// Sync source code to hidden textarea for whatever reason
+				$configurator.find(".field-source-encoded").on("change", function() {
+					$configurator.find(".field-source").val($(this).val());
+				});
+				$configurator.find(".field-source").on("change", function() {
+					$configurator.find(".field-source-cache").val($(this).val());
+				});
+
+				// Bind button clicks
+				$("button[data-template]").on("click", function() {
+					var button_text = $(this).text(),
+						template = $(this).attr("data-template");
+					log("Event Button clicked: " + button_text);
+					log("Template: " + template);
+					getTemplate(template, function(data, textStatus) {
+						log("$configurator: " + $configurator.length);
+						$configurator.fadeOut('fast', function() {
+							var $preview = $configurator.find(".field-preview"),
+								$source  = $configurator.find(".field-source")
+								$cache   = $configurator.find(".field-source-cache");
+
+							$configurator.find("legend").eq(0).html('Configure ' + button_text);
+							$preview.html(data);
+							$source.val(data);
+							$cache.val(data);
+
+							// Change events for token replacement
+							var x = 0;
+							for (x; x < tokens.length; x ++) {
+								var processTemplate = (function(tokens, x) {
+									return function() {
+										var template = $source.val();
+										log("Replace '" + tokens[x] + "' with '" + $(this).val() + "'");
+										template = template.replace(tokens[x], $(this).val());
+										log("Processed template: " + template);
+										$preview.html(template);
+									}
+								})(tokens, x);
+								var saveTemplate = function() {
+									$source.val($preview.html());
+									$cache.val($preview.html());
+								}
+								log("Bind events to: " + '[name="' + tokens[x] + '"]');
+								$configurator.find('[name="' + tokens[x] + '"]').on("click", saveTemplate);
+								$configurator.find('[name="' + tokens[x] + '"]').on("blur", saveTemplate);
+								$configurator.find('[name="' + tokens[x] + '"]').on("keyup", processTemplate);
+							}
+
+							$configurator.fadeIn('fast');
+						});
+					});
+					return false;
 				});
 			}
 
@@ -72,23 +136,8 @@
 					if (!data)
 						return alert("Generator could not be loaded! Error was: " + textStatus);
 
-					$this.prepend(data);
-					$modal = $this.find(".modal"),
-
-					// Bind generator functions
-					$("button[data-template]").on("click", function() {
-						var button_text = $(this).text(),
-							template = $(this).attr("data-template");
-						log("Event Button clicked: " + button_text);
-						log("Template: " + template);
-						getTemplate(template, function(data, textStatus) {
-							$modal.find(".modal-header").html('<h3>New ' + button_text + '</h3>');
-							$modal.find(".modal-body .field-preview").html(data);
-							$modal.find(".modal-body .field-source").val(data);
-							$modal.modal("show");
-						});
-						return false;
-					});
+					// Setup
+					startConfigurator(data);
 				});
 			})();
 		});
