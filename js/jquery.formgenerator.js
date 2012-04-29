@@ -1,17 +1,42 @@
 (function($) {
 	$.fn.formgenerator = function(options) {
-		var version = "0.1",
+		var version = "0.2",
 			opts = $.extend({
-				'verbose'	: false
+				'fileext'	: '.tpl',
+				'generator'	: 'generator.tpl',
+				'path'		: './templates',
+				'theme'		: 'bootstrap',
+				/**
+				 * List of tokens
+				 * optional value: markup if token is missing
+				 */
+				'tokens'	: [
+					"FIELDNAME",
+					"FIELDVALUE",
+					"FIELDREQUIED",
+					"PATTERN",
+					"TEXTREQUIRED",
+					"TEXTINVALID"
+				],
+				// Logging verbosity
+				'verbose'	: true
 			}, options);
 
 		return this.each(function() {
-			var $this = $(this),
-					dragElement,
-					dropElement;
+			var $this 		= $(this),
+				$form 		= $(this.form),
+				fileext		= opts.fileext ? opts.fileext : ".tpl",
+				generator	= opts.generator,
+				path 		= opts.path,
+				theme 		= opts.theme,
+				tokens		= opts.tokens,
+				baseurl		= path + "/" + theme + "/";
+
+			if (!($form || $form.length))
+				$form = $this;
 
 			function log(msg) {
-				if (! window.console) 
+				if (!window.console || opts.verbose === false)
 					return;
 				
 				if (typeof msg !== "string")
@@ -20,84 +45,47 @@
 					console.log(msg);
 			}
 
-			(function init() {
-				// Test for Drag & Drop compatability
-				var testresult = (function() {
-						var div = document.createElement('div');
-						return ('draggable' in div) || ('ondragstart' in div && 'ondrop' in div);
-				})();
-				log("testresult: " + testresult);
-				if (!testresult)
-					return alert('Browser does not support drag & drop! Can not continue.');
+			function getTemplate(template, callback) {
+				log("getTemplate() called with argument: " + template);
 
-				// Bind drag events
-				$("[draggable]", $this).each(function() {
-					log("draggable: " + this.nodeName);
-					$(this).on("dragstart", function(e) {
-						log("Event dragstart: " + this.nodeName);
-						return handleDragStart.apply(this, [e]);
-					});
-					$(this).on("drag", function() {
-						if (opts.verbose)
-							log("Event drag: " + this.nodeName);
-					});
-					$(this).on("dragenter", function() {
-						log("Event dragenter: " + this.nodeName);
-					});
-					$(this).on("dragleave", function() {
-						log("Event dragleave: " + this.nodeName);
-					});
-					$(this).on("dragend", function() {
-						log("Event dragend: " + this.nodeName);
-					});
+				// Get Template Contents
+				$.get(baseurl + template + fileext, function(data, textStatus) {
+					log("getTemplate() callback returned");
+					log("data: " + data)
+					log("textStatus: " + textStatus);
+					if (!data)
+						return alert("Template " + template + "could not be loaded! Error was: " + textStatus);
+
+					if (typeof callback === "function")
+						return callback(data);
 				});
-				// Bind drop events
-				$("form[droppable]").each(function() {
-					$(this).on("dragover", function(e) {
-						dropElement = this;
-						log("Event dragover: " + this.nodeName);
-						log("dropElement: " + this);
-						return handleDragOver.apply(this, [e]);
-					});
-					$(this).on("drop", function(e) {
-						log("Event drop: " + this.nodeName);
-						return handleDrop.apply(this, [e]);
+			}
+
+			(function init() {
+				log("init() called");
+				// Build generator from template
+				$.get(baseurl + generator, function(data, textStatus) {
+					log("init() callback returned");
+					log("data: " + data);
+					log("textStatus: " + textStatus);
+
+					if (data)
+						$this.prepend(data);
+					else
+						return alert("Generator could not be loaded! Error was: " + textStatus);
+
+					// Bind generator functions
+					$("button[data-template]").on("click", function() {
+						var template = $(this).attr("data-template");
+						log("Event click: " + this.innerHTML);
+						log("Template: " + template);
+						getTemplate(template, function(data, textStatus) {
+							$form.append(data);
+						});
+						return false;
 					});
 				});
 			})();
-
-			function handleDragStart(e) {
-				var e = e.originalEvent ? e.originalEvent : e;
-				log("handleDragStart() called with parameter:");
-				log(e);
-				dragElement = this;
-				log("dragElement: " + this);
-				log(e.dataTransfer);
-				e.dataTransfer.effectAllowed = 'copy';
-				e.dataTransfer.setData('text/html', this.innerHTML);
-			}
-			
-			function handleDragOver(e) {
-				var e = e.originalEvent ? e.originalEvent : e;
-				if (e.preventDefault)
-					e.preventDefault(); // Necessary. Allows us to drop.
-
-				e.dataTransfer.dropEffect = 'copyMove';
-
-				return false;
-			}
-
-			function handleDrop(e) {
-				var e = e.originalEvent ? e.originalEvent : e;
-				log("handleDrop() called with parameter:");
-				log(e);
-				if (e.stopPropagation)
-					e.stopPropagation();
-
-				$(this).append(e.dataTransfer.getData('text/html'));
-
-				return false;
-			}
 		});
 	}
 
